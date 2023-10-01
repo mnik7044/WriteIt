@@ -20,7 +20,7 @@ export default function RegisterPage()
         else{
             alert("Registration Failed")
             
-        }
+        } 
     }
 
     return(
