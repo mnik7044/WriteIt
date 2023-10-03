@@ -7,9 +7,11 @@ import Layout from "./Layout"
 import HomePage from './Pages/Homepage';
 import LoginPage from './Pages/LoginPage';
 import RegisterPage from './Pages/RegisterPage';
+import {UserContextProvider} from "./UserContext"
 
 function App() {
   return (
+    <UserContextProvider>
     <Routes>
       <Route path="/" element = {<Layout />}>
       <Route index element={ <HomePage /> } />
@@ -19,6 +21,7 @@ function App() {
       </Route>
 
     </Routes>   
+    </UserContextProvider>
   
   );
 }

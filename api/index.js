@@ -5,17 +5,20 @@ const User = require('./models/user');
 const app = express();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 
-const saltRounds = 10;
+
 
 app.use(cors({credentials:true,origin: "http://localhost:3000" }));
 app.use(express.json());
+app.use(cookieParser())
 
+const saltRounds = 10;
 const maxAge = 3 *24 *60 *60;  // This is a time in second, unlike cookie which except time in millisecond
+const secret = 'a secret string'
 
-
-const createToken = (id) => {
-    return jwt.sign({ id }, 'a secret string', {expiresIn: maxAge })
+const createToken = (username,id) => {
+    return jwt.sign({ username, id }, secret, {expiresIn: maxAge })
 }  // This is where we are creating and returning a token
 
 
@@ -45,16 +48,8 @@ app.post('/login', async (req, res) => {
         }
         const passOk = await bcrypt.compare(password, userDoc.password);
         if (passOk) {
-            // Passwords match, you can proceed with authentication
-            //res.json({ message: 'Login successful' });
-            //jwt.sign({ id: userDoc._id }, 'a secret string', {expiresIn: maxAge }, (err,token)=>{
-            //    if(err) throw err
-              //  res.cookie()
-            //})
-            const token = createToken(userDoc._id )
-            
-            res.cookie('jwt', token , {httpOnly: true, maxAge:maxAge*1000}).json('ok')
-
+            const token = createToken(username,userDoc._id )
+            res.cookie('jwt', token , {httpOnly: true, maxAge:maxAge*1000}).json({id: userDoc._id, username})
             
         } else {
             // Passwords do not match
@@ -66,12 +61,54 @@ app.post('/login', async (req, res) => {
 });
 
 
-const PORT = process.env.PORT || 4000;
+app.get('/profile', (req, res) => {
+    const { jwt: token } = req.cookies;
+
+    if (!token) {
+        return res.status(401).json({ message: 'JWT not provided' });
+    }
+
+    jwt.verify(token, secret, {}, async (err, decodedToken) => {
+        if (err) {
+            return res.status(401).json({ message: 'Invalid JWT' });
+        }
+
+        // Find the user based on the decoded token's ID
+        try {
+            const user = await User.findById(decodedToken.id);
+
+            if (!user) {
+                return res.status(401).json({ message: 'User not found' });
+            }
+
+            // Combine user information with the username
+            const userProfile = {
+                username: user.username,
+                _id: user._id, // Include the user's ID if needed
+                // Add any other fields you want to include
+            };
+
+            // Include the combined information in the response
+            res.json(userProfile);
+        } catch (e) {
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    });
+});
+
+
+
+app.post("/logout",(req,res) =>{
+    res.cookie('jwt' , '').json()
+ } )
+
+const PORT = process.env.PORT || 4000; 
 const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
  
 
+
+
 //w21Nrsn4Cs6Qcv7z
-// utt jhfghjg 
 
