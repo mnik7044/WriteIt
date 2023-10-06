@@ -107,6 +107,6 @@ button{
 
 }
 
-form h1{
+form.login form.register h1{
   text-align: center;
 }

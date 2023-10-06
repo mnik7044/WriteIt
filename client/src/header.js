@@ -52,8 +52,8 @@ export default function Header() {
       <nav>
         {username && (
           <>
-            <Link to="/" className="">
-              Create A New Post
+            <Link to="/create" className="">
+              New Post
             </Link>
             <Link to="" onClick ={logout} className="">
               Logout
@@ -75,3 +75,13 @@ export default function Header() {
 }
   //jhg   v vsz cv  kjgkg hfgfhj  ,jkh
 // hgdtdf b hkhj kljk  holy holy  godnik is the supreme of who is the god hs bhaw bhaw
+// rdf fcbn  jklh fgj  yuifg fgj    ygjtyufj mgh  
+// godnik ghm jhg  fth fgh fgj ghvbsdfuyi h hvkb  
+// gvbnbn v n fgh
+// godnik mishra
+//  hkbkhb godnik mishra
+// hkjghjkg
+// nikhil mishra 
+// godnik
+// http://console.aws.com/00
+

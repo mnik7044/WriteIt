@@ -6,19 +6,23 @@ const app = express();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
+const multer = require('multer')
+const uploadMiddleware = multer({ dest: 'uploads/' })
+const fs = require('fs')
+const Post = require("./models/post")
 
 
-
-app.use(cors({credentials:true,origin: "http://localhost:3000" }));
+app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(cookieParser())
+app.use('/uploads', express.static(__dirname +'/uploads'))
 
 const saltRounds = 10;
-const maxAge = 3 *24 *60 *60;  // This is a time in second, unlike cookie which except time in millisecond
+const maxAge = 3 * 24 * 60 * 60;  // This is a time in second, unlike cookie which except time in millisecond
 const secret = 'a secret string'
 
-const createToken = (username,id) => {
-    return jwt.sign({ username, id }, secret, {expiresIn: maxAge })
+const createToken = (username, id) => {
+    return jwt.sign({ username, id }, secret, { expiresIn: maxAge })
 }  // This is where we are creating and returning a token
 
 
@@ -48,9 +52,9 @@ app.post('/login', async (req, res) => {
         }
         const passOk = await bcrypt.compare(password, userDoc.password);
         if (passOk) {
-            const token = createToken(username,userDoc._id )
-            res.cookie('jwt', token , {httpOnly: true, maxAge:maxAge*1000}).json({id: userDoc._id, username})
-            
+            const token = createToken(username, userDoc._id)
+            res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 }).json({ id: userDoc._id, username })
+
         } else {
             // Passwords do not match
             res.status(401).json({ message: 'Invalid password' });
@@ -98,17 +102,55 @@ app.get('/profile', (req, res) => {
 
 
 
-app.post("/logout",(req,res) =>{
-    res.cookie('jwt' , '').json()
- } )
+app.post("/logout", (req, res) => {
+    res.cookie('jwt', '').json()
+})
 
-const PORT = process.env.PORT || 4000; 
+app.post("/post", uploadMiddleware.single('file'), async (req, res) => {
+    const { originalname, path } = req.file;
+    const parts = originalname.split('.')
+    const ext = parts[parts.length - 1]
+    const newPath = path + '.' + ext
+    fs.renameSync(path, newPath)
+    const{jwt: token} = req.cookies
+    jwt.verify(token, secret, {}, async (err, info) => {
+        if (err) throw err
+        const { title, summary, content } = req.body
+        const postDoc = await Post.create({
+            title,
+            summary,
+            content,
+            cover: newPath,
+            author: info.id
+           })
+
+        
+    
+    res.json(postDoc)
+    })
+
+
+})
+
+app.get('/post', async (req, res) => {
+    const posts = await Post.find()
+    .populate('author', ['username'])
+    .sort({createdAt:-1})
+    .limit(30)
+    res.json(posts)
+})
+
+
+
+
+const PORT = process.env.PORT || 4000;
 const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
- 
+
 
 
 
 //w21Nrsn4Cs6Qcv7z
+
 
