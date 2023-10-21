@@ -10,9 +10,10 @@ const multer = require('multer')
 const uploadMiddleware = multer({ dest: 'uploads/' })
 const fs = require('fs')
 const Post = require("./models/post")
+require('dotenv').config()
 
 
-app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+app.use(cors({ credentials: true, origin: "http://localhost:3001" }));
 app.use(express.json());
 app.use(cookieParser())
 app.use('/uploads', express.static(__dirname +'/uploads'))
@@ -26,7 +27,7 @@ const createToken = (username, id) => {
 }  // This is where we are creating and returning a token
 
 
-mongoose.connect("mongodb+srv://blogapp:w21Nrsn4Cs6Qcv7z@cluster0.n46n6ir.mongodb.net/?retryWrites=true&w=majority");
+mongoose.connect(process.env.MONGO_URI);
 
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
@@ -132,6 +133,8 @@ app.post("/post", uploadMiddleware.single('file'), async (req, res) => {
 
 })
 
+
+
 app.get('/post', async (req, res) => {
     const posts = await Post.find()
     .populate('author', ['username'])
@@ -139,6 +142,18 @@ app.get('/post', async (req, res) => {
     .limit(30)
     res.json(posts)
 })
+
+app.get("/post/:id", async(req,res) =>{
+    const{id} = req.params
+    const postDoc = await Post.findById(id).populate('author', ['username']);
+    res.json(postDoc)
+    
+
+})
+
+
+
+
 
 
 
@@ -150,7 +165,6 @@ const server = app.listen(PORT, () => {
 
 
 
-
-//w21Nrsn4Cs6Qcv7z
-
-
+  // w21Nrsn4Cs6Qcv7z
+  // nklk vbnm bjvbtf uf dtjghygghvb
+  // godniknm   
