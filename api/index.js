@@ -13,7 +13,8 @@ const Post = require("./models/post")
 require('dotenv').config()
 
 
-app.use(cors({ credentials: true, origin: "http://localhost:3001" }));
+
+app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(cookieParser())
 app.use('/uploads', express.static(__dirname +'/uploads'))
@@ -133,6 +134,45 @@ app.post("/post", uploadMiddleware.single('file'), async (req, res) => {
 
 })
 
+app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
+    let newPath = null;
+    if (req.file) {
+      const { originalname, path } = req.file;
+      const parts = originalname.split('.');
+      const ext = parts[parts.length - 1];
+      newPath = path + '.' + ext;
+      fs.renameSync(path, newPath);
+    }
+  
+    const token = req.cookies.jwt; // Extract the JWT token from cookies
+  
+    if (!token) {
+      return res.status(401).json({ message: 'JWT not provided' });
+    }
+  
+    jwt.verify(token, secret, {}, async (err, info) => {
+      if (err) {
+        return res.status(401).json({ message: 'Invalid JWT' });
+      }
+  
+      const { id, title, summary, content } = req.body;
+      const postDoc = await Post.findById(id);
+      const isAuthor = postDoc.author.toString() === info.id.toString(); // Compare as strings
+      if (!isAuthor) {
+        return res.status(400).json('You are not the author');
+      }
+  
+      await postDoc.update({
+        title,
+        summary,
+        content,
+        cover: newPath ? newPath : postDoc.cover,
+      });
+  
+      res.json(postDoc);
+    });
+  });
+  
 
 
 app.get('/post', async (req, res) => {
