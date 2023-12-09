@@ -27,6 +27,10 @@ const createToken = (username, id) => {
 
 mongoose.connect(process.env.MONGO_URI);
 
+app.get("/",(req,res) =>{
+    res.json("Hello World")
+})
+
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   try {
